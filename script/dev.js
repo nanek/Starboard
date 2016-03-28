@@ -4,6 +4,7 @@ const join = require('path').join;
 const webpack = require('webpack');
 const nodemon = require('nodemon');
 const browserSync = require('browser-sync');
+const R = require('ramda');
 
 const serverConf = require('../webpack.config.server');
 const browserConf = require('../webpack.config.browser');
@@ -11,7 +12,7 @@ const delayedJobConf = require('../webpack.config.delayed-job');
 
 class NodemonManager {
   constructor(opts) {
-    this.opts = opts;
+    this.opts = R.merge(opts, {stdout: false});
     this.hasStarted = false;
   }
 
@@ -19,7 +20,11 @@ class NodemonManager {
     if (this.hasStarted) {
       return;
     }
-    this.nodemonInstance = nodemon(this.opts);
+    this.nodemonInstance = nodemon(this.opts)
+      .on('readable', function () {
+        this.stdout.pipe(process.stdout);
+        this.stderr.pipe(process.stderr);
+      });
   }
 }
 
